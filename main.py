@@ -41,9 +41,8 @@ def extract_problem_parts(url: str) -> dict:
     constraints_h4 = next((h for h in h4_tags if h.text.strip() == "Constraints"), None)
     input_h4 = next((h for h in h4_tags if h.text.strip() == "Input Specification"), None)
     output_h4 = next((h for h in h4_tags if h.text.strip() == "Output Specification"), None)
-    sample_input_h4 = next((h for h in h4_tags if h.text.strip() == "Sample Input"), None)
 
-    if not input_h4 or not output_h4 or not sample_input_h4:
+    if not input_h4 or not output_h4:
         raise ValueError("Could not find all required section headers.")
 
     first_h4 = h4_tags[0]
@@ -72,25 +71,26 @@ def extract_problem_parts(url: str) -> dict:
 
     output_parts = []
     for tag in output_h4.find_next_siblings():
-        if tag == sample_input_h4:
+        if tag.name == "h4" and tag.text.strip().startswith("Sample Input"):
             break
         if tag.name == "p":
             output_parts.append(tag.text.strip())
 
-    sample_input = ""
-    if sample_input_h4:
-        for tag in sample_input_h4.find_next_siblings():
-            if tag.name == "pre":
-                sample_input = tag.text.strip()
-                break
+    sample_inputs = []
+    for h in h4_tags:
+        if h.text.strip().startswith("Sample Input"):
+            for tag in h.find_next_siblings():
+                if tag.name == "pre":
+                    sample_inputs.append(tag.text.strip())
+                    break
 
-    sample_output = ""
-    sample_output_h4 = next((h for h in h4_tags if h.text.strip() == "Sample Output"), None)
-    if sample_output_h4:
-        for tag in sample_output_h4.find_next_siblings():
-            if tag.name == "pre":
-                sample_output = tag.text.strip()
-                break
+    sample_outputs = []
+    for h in h4_tags:
+        if h.text.strip().startswith("Sample Output"):
+            for tag in h.find_next_siblings():
+                if tag.name == "pre":
+                    sample_outputs.append(tag.text.strip())
+                    break
 
     return {
         "title": title,
@@ -101,8 +101,8 @@ def extract_problem_parts(url: str) -> dict:
         "constraints_header": constraints_h4.text.strip() if constraints_h4 else None,
         "input_header": input_h4.text.strip(),
         "output_header": output_h4.text.strip(),
-        "sample_input": sample_input,
-        "sample_output": sample_output,
+        "sample_inputs": sample_inputs,
+        "sample_outputs": sample_outputs,
     }
 
 def format_problem_comment(data: dict) -> str:
@@ -135,18 +135,20 @@ def generate_function_stub(title: str) -> str:
     name = to_snake_case(title)
     return f"pub fn {name}(input: &str) -> String {{\n    todo!(\"pending solution!\")\n}}"
 
-def generate_test_module(function_name: str, sample_input: str, sample_output: str) -> str:
-    indented_input = textwrap.indent(sample_input.strip(), " " * 12)
-    indented_output = textwrap.indent(sample_output.strip(), " " * 12)
+def generate_test_module(function_name: str, sample_inputs: list[str], sample_outputs: list[str]) -> str:
+    def normalize_indent(s):
+        return "\n".join(line.lstrip() for line in s.splitlines())
 
-    return f"""\
-#[cfg(test)]
-mod tests {{
-    use super::*;
-    use indoc::indoc;
+    tests = []
+    single_example = len(sample_inputs) == 1
 
+    for i, (sample_in, sample_out) in enumerate(zip(sample_inputs, sample_outputs), start=1):
+        test_name = "example" if single_example else f"example_{i}"
+        indented_input = textwrap.indent(normalize_indent(sample_in.strip()), " " * 12)
+        indented_output = textwrap.indent(normalize_indent(sample_out.strip()), " " * 12)
+        tests.append(f"""\
     #[test]
-    fn example() {{
+    fn {test_name}() {{
         let input = indoc! {{\"
 {indented_input}
         \"}};
@@ -154,7 +156,16 @@ mod tests {{
 {indented_output}
         \"}};
         assert_eq!({function_name}(input), expected);
-    }}
+    }}""")
+
+    tests_str = "\n\n".join(tests)
+    return f"""\
+#[cfg(test)]
+mod tests {{
+    use super::*;
+    use indoc::indoc;
+
+{tests_str}
 }}"""
 
 def write_to_file(content: str, filename: str = OUTPUT_FILENAME) -> None:
@@ -171,8 +182,8 @@ def main() -> None:
         function_stub = generate_function_stub(data["title"])
         test_module = generate_test_module(
             to_snake_case(data["title"]),
-            data["sample_input"],
-            data["sample_output"]
+            data["sample_inputs"],
+            data["sample_outputs"]
         )
 
         write_to_file(comment_block + "\n" + function_stub + "\n\n" + test_module)
