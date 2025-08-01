@@ -29,12 +29,18 @@ def transform_text(text: str, max_width: int = MAX_WIDTH) -> str:
 def to_snake_case(title: str) -> str:
     return re.sub(r"[^\w]+", "_", title.strip().lower()).strip("_")
 
+def extract_clean_title(soup: BeautifulSoup) -> str:
+    raw_title = soup.find("h2").text.strip()
+    if " - " in raw_title:
+        return raw_title.split(" - ", maxsplit=1)[-1].strip()
+    return raw_title
+
 def extract_problem_parts(url: str) -> dict:
     response = requests.get(url)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "lxml")
 
-    title = soup.find("h2").text.strip()
+    title = extract_clean_title(soup)
 
     h4_tags = soup.find_all("h4")
 
