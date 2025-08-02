@@ -6,9 +6,9 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "beautifulsoup4>=4.13.4",
-    "click>=8.2.1",
     "lxml>=6.0.0",
     "requests>=2.32.4",
+    "rich-click>=1.8.9",
 ]
 
 [project.scripts]

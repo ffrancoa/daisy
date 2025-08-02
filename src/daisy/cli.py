@@ -1,4 +1,4 @@
-import click
+import rich_click as click
 from urllib.parse import urlparse
 
 from daisy.platforms import dmoj
