@@ -1,7 +1,7 @@
 [project]
-name = "dsa-scraper"
+name = "daisy"
 version = "0.1.0"
-description = "Add your description here"
+description = "A Python CLI that scrapes coding sites to craft Rust problem templates. "
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
