@@ -35,7 +35,9 @@ def url_cmd(url):
             data["sample_inputs"],
             data["sample_outputs"]
         )
-        writer.write_to_file(comment_block + "\n" + function_stub + "\n\n" + test_module)
+        lib_content = comment_block + "\n" + function_stub + "\n\n" + test_module
+        project_name = formatter.to_snake_case(data["title"])
+        writer.write_rust_project(project_name, lib_content)
     except Exception as e:
         click.echo(f"Error: {e}")
 
