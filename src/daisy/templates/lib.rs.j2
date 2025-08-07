@@ -1,0 +1,48 @@
+// {{ title }}
+//
+{% for line in description.splitlines() %}
+{{ '// ' + line if line else '//' }}
+{% endfor %}
+//
+{% if constraints %}
+{{ '// ' + constraints_header }}
+{{ '// ' + '-' * constraints_header|length }}
+{% for line in constraints.splitlines() %}
+{{ '// ' + line if line else '//' }}
+{% endfor %}
+//
+{% endif %}
+{{ '// ' + input_header }}
+{{ '// ' + '-' * input_header|length }}
+{% for line in input_spec.splitlines() %}
+{{ '// ' + line if line else '//' }}
+{% endfor %}
+//
+{{ '// ' + output_header }}
+{{ '// ' + '-' * output_header|length }}
+{% for line in output_spec.splitlines() %}
+{{ '// ' + line if line else '//' }}
+{% endfor %}
+
+pub fn {{ function_name }}(input: &str) -> String {
+    todo!("pending solution!")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use indoc::indoc;
+
+{% for s in samples %}
+    #[test]
+    fn {{ s.name }}() {
+        let input = indoc! {"
+{{ s.input }}
+        "};
+        let expected = indoc! {"
+{{ s.output }}
+        "};
+        assert_eq!({{ function_name }}(input), expected);
+    }
+{% endfor %}
+}

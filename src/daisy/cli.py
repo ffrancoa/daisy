@@ -2,7 +2,9 @@ import rich_click as click
 from urllib.parse import urlparse
 
 from daisy.platforms import dmoj
-from daisy import formatter, writer
+from daisy.formatter import render_rust_template
+from daisy.utils import to_snake_case
+from daisy.writer import write_rust_project
 
 SCRAPERS = {
     "dmoj.ca": dmoj.extract_problem_parts,
@@ -28,16 +30,9 @@ def url_cmd(url: str):
 
     try:
         data = scraper(url)
-        comment_block = formatter.format_problem_comment(data)
-        function_stub = formatter.generate_function_stub(data["title"])
-        test_module = formatter.generate_test_module(
-            formatter.to_snake_case(data["title"]),
-            data["sample_inputs"],
-            data["sample_outputs"]
-        )
-        lib_content = comment_block + "\n" + function_stub + "\n\n" + test_module
-        project_name = formatter.to_snake_case(data["title"])
-        writer.write_rust_project(project_name, lib_content)
+        lib_content = render_rust_template(data)
+        project_name = to_snake_case(data["title"])
+        write_rust_project(project_name, lib_content)
     except Exception as e:
         click.echo(f"Error: {e}")
 

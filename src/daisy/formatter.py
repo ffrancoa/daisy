@@ -1,66 +1,43 @@
 import textwrap
+from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader
 
 from daisy.utils import to_snake_case
 
-def format_problem_comment(data: dict) -> str:
-    lines = []
-    lines.append(f"// {data['title']}")
-    lines.append("//")
+TEMPLATES_DIR = Path(__file__).parent / "templates"
 
-    lines.extend([f"// {line}" if line else "//" for line in data["description"].splitlines()])
-    lines.append("//")
+def normalize_indent(s):
+    return "\n".join(line.lstrip() for line in s.splitlines())
 
-    if data.get("constraints"):
-        lines.append(f"// {data['constraints_header']}")
-        lines.append(f"// {'-' * len(data['constraints_header'])}")
-        lines.extend([f"// {line}" if line else "//" for line in data["constraints"].splitlines()])
-        lines.append("//")
+def format_samples(inputs: list[str], outputs: list[str]) -> list[dict]:
+    return [
+        {
+            "name": "example" if len(inputs) == 1 else f"example_{i+1}",
+            "input": textwrap.indent(normalize_indent(inn.strip()), " " * 12),
+            "output": textwrap.indent(normalize_indent(out.strip()), " " * 12),
+        }
+        for i, (inn, out) in enumerate(zip(inputs, outputs))
+    ]
 
-    lines.append(f"// {data['input_header']}")
-    lines.append(f"// {'-' * len(data['input_header'])}")
-    lines.extend([f"// {line}" if line else "//" for line in data["input_spec"].splitlines()])
-    lines.append("//")
+def render_rust_template(data: dict) -> str:
+    env = Environment(
+        loader=FileSystemLoader(TEMPLATES_DIR),
+        trim_blocks=True,
+        lstrip_blocks=True
+    )
 
-    lines.append(f"// {data['output_header']}")
-    lines.append(f"// {'-' * len(data['output_header'])}")
-    lines.extend([f"// {line}" if line else "//" for line in data["output_spec"].splitlines()])
-    lines.append("")
+    template = env.get_template("lib.rs.j2")
 
-    return "\n".join(lines)
-
-def generate_function_stub(title: str) -> str:
-    name = to_snake_case(title)
-    return f"pub fn {name}(input: &str) -> String {{\n    todo!(\"pending solution!\")\n}}"
-
-def generate_test_module(function_name: str, sample_inputs: list[str], sample_outputs: list[str]) -> str:
-    def normalize_indent(s):
-        return "\n".join(line.lstrip() for line in s.splitlines())
-
-    tests = []
-    single_example = len(sample_inputs) == 1
-
-    for i, (sample_in, sample_out) in enumerate(zip(sample_inputs, sample_outputs), start=1):
-        test_name = "example" if single_example else f"example_{i}"
-        indented_input = textwrap.indent(normalize_indent(sample_in.strip()), " " * 12)
-        indented_output = textwrap.indent(normalize_indent(sample_out.strip()), " " * 12)
-        tests.append(f"""\
-    #[test]
-    fn {test_name}() {{
-        let input = indoc! {{\"
-{indented_input}
-        \"}};
-        let expected = indoc! {{\"
-{indented_output}
-        \"}};
-        assert_eq!({function_name}(input), expected);
-    }}""")
-
-    tests_str = "\n\n".join(tests)
-    return f"""\
-#[cfg(test)]
-mod tests {{
-    use super::*;
-    use indoc::indoc;
-
-{tests_str}
-}}"""
+    return template.render(
+        title=data["title"],
+        description=data["description"],
+        constraints=data.get("constraints"),
+        constraints_header=data.get("constraints_header", ""),
+        input_header=data["input_header"],
+        input_spec=data["input_spec"],
+        output_header=data["output_header"],
+        output_spec=data["output_spec"],
+        function_name=to_snake_case(data["title"]),
+        samples=format_samples(data["sample_inputs"], data["sample_outputs"]),
+    )
