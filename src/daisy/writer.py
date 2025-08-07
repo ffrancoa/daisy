@@ -13,16 +13,11 @@ jinja_env = Environment(
     autoescape=select_autoescape(disabled_extensions=("toml", "rs", "txt")),
 )
 
-def write_to_file(content: str, filename: str = OUTPUT_FILENAME) -> None:
-    path = Path(filename)
-    path.write_text(content + "\n", encoding="utf-8")
-    echo(f"ok: written to '{filename}'")
-
 def write_rust_project(project_name: str, lib_content: str) -> None:
     """
     Create a minimal Rust project with the given name and lib.rs content.
     """
-    root_dir = Path(project_name)
+    root_dir = Path.cwd() / "exercises" / project_name
     src_dir = root_dir / "src"
     src_dir.mkdir(parents=True, exist_ok=True)
 

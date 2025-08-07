@@ -1,6 +1,6 @@
-lib.rs
 src/daisy.egg-info
 src/daisy/__pycache__
 src/daisy/platforms/__pycache__
+exercises/
 .git/
 .venv/
