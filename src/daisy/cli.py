@@ -15,9 +15,9 @@ def cli():
     """A Python CLI that scrapes coding sites to craft Rust problem templates."""
     pass
 
-@cli.command()
+@cli.command(name="url")
 @click.argument("url")
-def url_cmd(url):
+def url_cmd(url: str):
     """Generate template from problem URL."""
     domain = urlparse(url).netloc
     scraper = next((fn for host, fn in SCRAPERS.items() if host in domain), None)
