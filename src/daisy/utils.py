@@ -2,11 +2,12 @@ import re
 import textwrap
 
 from bs4 import BeautifulSoup
+from bs4.element import NavigableString
 
 MAX_WIDTH = 84
 
-def transform_text(text: str, max_width: int = MAX_WIDTH) -> str:
-    def replace_tilde_block(match: re.Match) -> str:
+def format_dmoj_text(text: str, max_width: int = MAX_WIDTH) -> str:
+    def _replace_tilde_block(match: re.Match) -> str:
         content = match.group(1)
         content = content.replace(r"\le", "≤").replace(r"\,", " ")
         content = content.replace(r"\ne", "≠").replace(r"\,", " ")
@@ -14,20 +15,120 @@ def transform_text(text: str, max_width: int = MAX_WIDTH) -> str:
         content = content.replace(r"\dots", "…")
         content = re.sub(r'(?<!\w)([A-Za-z]\w*)(?!\w)', r'`\1`', content)
         return content
-
+    
     processed_lines = []
+
     for raw_line in text.splitlines():
-        transformed = re.sub(r"~(.*?)~", replace_tilde_block, raw_line.strip())
+        transformed = re.sub(r"~(.*?)~", _replace_tilde_block, raw_line.strip())
         wrapped = textwrap.fill(transformed, width=max_width) if transformed else ""
         processed_lines.append(wrapped)
 
     return "\n".join(processed_lines)
 
+def format_leetcode_text(html: str, max_width: int = MAX_WIDTH) -> str:
+    """
+    Format small HTML snippets coming from LeetCode:
+    - convert <sup>n</sup> -> ^n (without spaces)
+    - replace <=, &lt;=, >=, &gt;= -> ≤ / ≥ and ensure spaces around them
+    - for <code>...</code> content, wrap only identifier-like tokens
+      (allowing dotted identifiers, e.g. nums.length) in backticks
+    - normalize whitespace and line-wrap to max_width
+    """
+    soup = BeautifulSoup(html, "lxml")
+
+    # 1) Convert <sup>n</sup> -> ^n (as NavigableString)
+    for sup in soup.find_all("sup"):
+        sup.replace_with(NavigableString(f"^{sup.get_text(strip=True)}"))
+
+    # helper: process the textual content inside <code> blocks
+    def _process_code_content(s: str) -> str:
+        # Replace HTML entities and plain tokens for <=/>= first
+        s = s.replace("&lt;=", "≤").replace("&gt;=", "≥")
+        s = s.replace("<=", "≤").replace(">=", "≥")
+
+        # Normalize spaces around ≤/≥
+        s = re.sub(r"\s*≤\s*", " ≤ ", s)
+        s = re.sub(r"\s*≥\s*", " ≥ ", s)
+
+        # Remove spaces around ^ (exponents): "10 ^4" -> "10^4"
+        s = re.sub(r"\s*\^\s*", "^", s)
+
+        # Wrap identifier-like tokens (letters, underscores, digits; allow dotted parts)
+        # - begins with a letter, then \w*; allow ".part" sequences
+        ident_pattern = r"(?<!\w)([A-Za-z]\w*(?:\[[^\]]+\]|\.[A-Za-z]\w*)*)(?!\w)"
+        s = re.sub(ident_pattern, r"`\1`", s)
+
+        # Collapse multiple spaces and trim
+        s = re.sub(r"\s+", " ", s).strip()
+        return s
+
+    # 2) For each <code> tag, replace with processed text (which may include backticks)
+    for code_tag in soup.find_all("code"):
+        processed = _process_code_content(code_tag.get_text())
+        code_tag.replace_with(NavigableString(processed))
+
+    # 3) Extract resulting text and apply final normalizations
+    text = soup.get_text()
+
+    # Ensure spaces around ≤/≥ globally (just in case)
+    text = re.sub(r"\s*≤\s*", " ≤ ", text)
+    text = re.sub(r"\s*≥\s*", " ≥ ", text)
+
+    # Remove stray spaces before ^ and normalize spaces
+    text = re.sub(r"\s+\^", "^", text)
+    text = re.sub(r"\s+", " ", text).strip()
+
+    # 4) Wrap each logical line to max_width (preserve empty lines)
+    processed_lines = []
+    for raw_line in text.splitlines():
+        if raw_line.strip():
+            wrapped = textwrap.fill(raw_line.strip(), width=max_width)
+        else:
+            wrapped = ""
+        processed_lines.append(wrapped)
+
+    return "\n".join(processed_lines)
+
+def is_math_constraint(line: str) -> bool:
+    """Return True if the constraint looks like a mathematical expression."""
+    return bool(re.search(r"(≤|≥|<|>|=|\^\d|\d)", line))
+
+def group_constraints(constraints: list[str]) -> str:
+    """
+    Join constraints so that:
+      - Math constraints are grouped without blank lines.
+      - Exactly one blank line before the first textual constraint.
+    """
+    processed = []
+    last_was_math = None
+
+    for line in constraints:
+        line = line.strip()
+        if not line:
+            continue  # skip accidental empties
+
+        if is_math_constraint(line):
+            if last_was_math is False:  # coming from text → math
+                processed.append("")  # keep separation from previous text
+            processed.append(line)
+            last_was_math = True
+        else:
+            if last_was_math:  # coming from math → text
+                processed.append("")  # exactly one blank line before text
+            processed.append(line)
+            last_was_math = False
+
+    return "\n".join(processed)
+
 def to_snake_case(title: str) -> str:
     return re.sub(r"[^\w]+", "_", title.strip().lower()).strip("_")
 
 def extract_clean_title(soup: BeautifulSoup) -> str:
-    raw_title = soup.find("h2").text.strip()
+    h2_tag = soup.find("h2")
+    if h2_tag is None:
+        raise ValueError("No <h2> element found in the HTML content.")
+
+    raw_title = h2_tag.get_text(strip=True)
     if " - " in raw_title:
         return raw_title.split(" - ", maxsplit=1)[-1].strip()
     return raw_title

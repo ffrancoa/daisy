@@ -1,28 +1,34 @@
 // {{ title }}
 //
-{% for line in description.splitlines() %}
+{% for line in description.splitlines() -%}
 {{ '// ' + line if line else '//' }}
 {% endfor %}
-//
 {% if constraints %}
+//
 {{ '// ' + constraints_header }}
 {{ '// ' + '-' * constraints_header|length }}
-{% for line in constraints.splitlines() %}
+{% for line in constraints.splitlines() -%}
 {{ '// ' + line if line else '//' }}
 {% endfor %}
+{% endif -%}
+
+{% if input_spec %}
 //
-{% endif %}
 {{ '// ' + input_header }}
 {{ '// ' + '-' * input_header|length }}
-{% for line in input_spec.splitlines() %}
+{% for line in input_spec.splitlines() -%}
 {{ '// ' + line if line else '//' }}
 {% endfor %}
+{% endif -%}
+
+{% if output_spec %}
 //
 {{ '// ' + output_header }}
 {{ '// ' + '-' * output_header|length }}
-{% for line in output_spec.splitlines() %}
+{% for line in output_spec.splitlines() -%}
 {{ '// ' + line if line else '//' }}
 {% endfor %}
+{% endif %}
 
 pub fn {{ function_name }}(input: &str) -> String {
     todo!("pending solution!")
@@ -33,7 +39,7 @@ mod tests {
     use super::*;
     use indoc::indoc;
 
-{% for s in samples %}
+{% for s in samples -%}
     #[test]
     fn {{ s.name }}() {
         let input = indoc! {"

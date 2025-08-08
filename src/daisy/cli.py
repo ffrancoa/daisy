@@ -1,14 +1,14 @@
 import rich_click as click
 from urllib.parse import urlparse
 
-from daisy.platforms import dmoj
+from daisy.platforms import dmoj, leetcode
 from daisy.formatter import render_rust_template
 from daisy.utils import to_snake_case
 from daisy.writer import write_rust_project
 
 SCRAPERS = {
     "dmoj.ca": dmoj.extract_problem_parts,
-    # future: "leetcode.com": leetcode.extract_problem_parts,
+    "leetcode.com": leetcode.extract_problem_parts,
     # future: "codeforces.com": codeforces.extract_problem_parts,
 }
 

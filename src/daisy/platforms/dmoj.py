@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from daisy.utils import extract_clean_title, transform_text
+from daisy.utils import extract_clean_title, format_dmoj_text
 
 def extract_problem_parts(url: str) -> dict:
     response = requests.get(url)
@@ -68,10 +68,10 @@ def extract_problem_parts(url: str) -> dict:
 
     return {
         "title": title,
-        "description": "\n\n".join(transform_text(p) for p in description_parts),
-        "constraints": "\n\n".join(transform_text(p) for p in constraints_parts) if constraints_parts else None,
-        "input_spec": "\n\n".join(transform_text(p) for p in input_parts),
-        "output_spec": "\n\n".join(transform_text(p) for p in output_parts),
+        "description": "\n\n".join(format_dmoj_text(p) for p in description_parts),
+        "constraints": "\n\n".join(format_dmoj_text(p) for p in constraints_parts) if constraints_parts else None,
+        "input_spec": "\n\n".join(format_dmoj_text(p) for p in input_parts),
+        "output_spec": "\n\n".join(format_dmoj_text(p) for p in output_parts),
         "constraints_header": constraints_h4.text.strip() if constraints_h4 else None,
         "input_header": input_h4.text.strip(),
         "output_header": output_h4.text.strip(),
