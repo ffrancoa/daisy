@@ -113,7 +113,7 @@ def extract_rust_signature(code_definition_json: str) -> str | None:
         return None
 
     default_code = rust_entry.get("defaultCode", "")
-    # Regex: find `pub fn name(...) -> type { ... }` capturing braces content non-greedily
+
     matched = re.search(
         r"(pub\s+fn\s+[^(]+\([^)]*\)\s*->\s*[^{]+\{\s*\})",
         default_code,
