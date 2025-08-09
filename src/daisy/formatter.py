@@ -16,7 +16,12 @@ def format_samples(inputs: list[str], outputs: list[str], explanations: list[str
             "name": "example" if len(inputs) == 1 else f"example_{i+1}",
             "input": normalize_indent(inn.strip()),
             "output": normalize_indent(out.strip()),
-            "explanation": normalize_indent(explanations[i].strip()) if i < len(explanations) and explanations[i] else ""
+            "explanation": (
+                textwrap.fill(
+                    normalize_indent(explanations[i].strip()),
+                    width=77  # max width = 88
+                ) if i < len(explanations) and explanations[i] else ""
+            )
         }
         for i, (inn, out) in enumerate(zip(inputs, outputs))
     ]

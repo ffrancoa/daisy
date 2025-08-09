@@ -60,7 +60,9 @@ mod tests {
 {{ s.input | indent(8, true) }}
         let expected = {{ s.output }};
         {% if s.explanation %}
-        // {{ s.explanation }}
+        {% for line in s.explanation.splitlines() %}
+        // {{ line }}
+        {% endfor %}
         {% endif %}
         assert_eq!({{ function_name }}(nums, target), expected);
         {% endif %}
