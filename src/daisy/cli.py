@@ -32,7 +32,7 @@ def url_cmd(url: str):
         data = scraper(url)
         lib_content = render_rust_template(data)
         project_name = to_snake_case(data["title"])
-        use_indoc = data.get("use_indoc") is None
+        use_indoc = data.get("rust_signature") is None
         write_rust_project(project_name, lib_content, use_indoc)
     except Exception as e:
         click.echo(f"Error: {e}")

@@ -10,7 +10,6 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 def format_samples(inputs: list[str], outputs: list[str], explanations: list[str], varnames: list[list[str]]) -> list[dict]:
     def _normalize_indent(s):
         return "\n".join(line.lstrip() for line in s.splitlines())
-
     return [
         {
             "name": "example" if len(inputs) == 1 else f"example_{i+1}",
