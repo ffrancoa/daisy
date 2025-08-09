@@ -64,7 +64,7 @@ mod tests {
         // {{ line }}
         {% endfor %}
         {% endif %}
-        assert_eq!({{ function_name }}(nums, target), expected);
+        assert_eq!({{ function_name }}({{ s.varnames | join(", ") }}), expected);
         {% endif %}
     }
 {% endfor %}

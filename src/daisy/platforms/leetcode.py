@@ -87,7 +87,7 @@ def extract_problem_parts(url: str) -> dict:
 
     constraints_block = group_constraints(constraints_parts) if constraints_parts else None
     rust_signature = extract_rust_signature(question.get("codeDefinition", ""))
-    sample_inputs, sample_outputs, sample_explanations = extract_samples(soup)
+    sample_inputs, sample_outputs, sample_explanations, varnames = extract_samples(soup)
 
     return {
         "title": title,
@@ -97,6 +97,7 @@ def extract_problem_parts(url: str) -> dict:
         "sample_inputs": sample_inputs,
         "sample_outputs": sample_outputs,
         "sample_explanations": sample_explanations,
+        "sample_varnames": varnames,
         "rust_signature": rust_signature,
     }
 
@@ -126,7 +127,7 @@ def extract_rust_signature(code_definition_json: str) -> str | None:
         return lines[0]
     return None
 
-def extract_samples(soup: BeautifulSoup) -> tuple[list[str], list[str], list[str]]:
+def extract_samples(soup: BeautifulSoup) -> tuple[list[str], list[str], list[str], list[list[str]]]:
     """
     Parse LeetCode <pre> example blocks and produce Rust-ready
     `sample_inputs` (multi-line let-statements) and `sample_outputs`.
@@ -257,6 +258,7 @@ def extract_samples(soup: BeautifulSoup) -> tuple[list[str], list[str], list[str
     sample_inputs: list[str]  = []
     sample_outputs: list[str]  = []
     sample_explanations: list[str]  = []
+    sample_varnames: list[list[str]] = []
 
     for pre in soup.find_all("pre"):
         text = pre.get_text("\n", strip=True)
@@ -275,15 +277,18 @@ def extract_samples(soup: BeautifulSoup) -> tuple[list[str], list[str], list[str
             continue
 
         input_lines = []
+        varnames = []
         for name, raw_val in assignments:
             rust_val = _to_rust_value(raw_val)
             input_lines.append(f"let {name} = {rust_val};")
+            varnames.append(name)
 
         sample_inputs.append("\n".join(input_lines))
+        sample_varnames.append(varnames)
 
         expected_val = _to_rust_value(output_str)
         sample_outputs.append(expected_val)
 
         sample_explanations.append(explanation_str)
 
-    return sample_inputs, sample_outputs, sample_explanations
+    return sample_inputs, sample_outputs, sample_explanations, sample_varnames
