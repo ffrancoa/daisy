@@ -87,7 +87,7 @@ def extract_problem_parts(url: str) -> dict:
 
     constraints_block = group_constraints(constraints_parts) if constraints_parts else None
     rust_signature = extract_rust_signature(question.get("codeDefinition", ""))
-    sample_inputs, sample_outputs = extract_samples(soup)
+    sample_inputs, sample_outputs, sample_explanations = extract_samples(soup)
 
     return {
         "title": title,
@@ -96,6 +96,7 @@ def extract_problem_parts(url: str) -> dict:
         "constraints_header": constraints_header,
         "sample_inputs": sample_inputs,
         "sample_outputs": sample_outputs,
+        "sample_explanations": sample_explanations,
         "rust_signature": rust_signature,
     }
 
@@ -125,7 +126,7 @@ def extract_rust_signature(code_definition_json: str) -> str | None:
         return lines[0]
     return None
 
-def extract_samples(soup: BeautifulSoup) -> tuple[list[str], list[str]]:
+def extract_samples(soup: BeautifulSoup) -> tuple[list[str], list[str], list[str]]:
     """
     Parse LeetCode <pre> example blocks and produce Rust-ready
     `sample_inputs` (multi-line let-statements) and `sample_outputs`.
@@ -253,18 +254,21 @@ def extract_samples(soup: BeautifulSoup) -> tuple[list[str], list[str]]:
         # fallback: return as-is (caller may handle)
         return raw
 
-    sample_inputs: list[str] = []
-    sample_outputs: list[str] = []
+    sample_inputs: list[str]  = []
+    sample_outputs: list[str]  = []
+    sample_explanations: list[str]  = []
 
     for pre in soup.find_all("pre"):
         text = pre.get_text("\n", strip=True)
         input_m = re.search(r"Input:\s*(.+)", text)
         output_m = re.search(r"Output:\s*(.+)", text)
+        explanation_match = re.search(r"Explanation:\s*(.+)", text)
         if not input_m or not output_m:
             continue
 
         input_str = input_m.group(1).strip()
         output_str = output_m.group(1).strip()
+        explanation_str = explanation_match.group(1).strip() if explanation_match else ""
 
         assignments = _parse_assignments(input_str)
         if not assignments:
@@ -277,8 +281,9 @@ def extract_samples(soup: BeautifulSoup) -> tuple[list[str], list[str]]:
 
         sample_inputs.append("\n".join(input_lines))
 
-        # expected
         expected_val = _to_rust_value(output_str)
         sample_outputs.append(expected_val)
 
-    return sample_inputs, sample_outputs
+        sample_explanations.append(explanation_str)
+
+    return sample_inputs, sample_outputs, sample_explanations

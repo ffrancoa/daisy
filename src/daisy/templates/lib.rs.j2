@@ -59,6 +59,9 @@ mod tests {
         {% else %}
 {{ s.input | indent(8, true) }}
         let expected = {{ s.output }};
+        {% if s.explanation %}
+        // {{ s.explanation }}
+        {% endif %}
         assert_eq!({{ function_name }}(nums, target), expected);
         {% endif %}
     }

@@ -10,12 +10,13 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 def normalize_indent(s):
     return "\n".join(line.lstrip() for line in s.splitlines())
 
-def format_samples(inputs: list[str], outputs: list[str]) -> list[dict]:
+def format_samples(inputs: list[str], outputs: list[str], explanations: list[str]) -> list[dict]:
     return [
         {
             "name": "example" if len(inputs) == 1 else f"example_{i+1}",
             "input": normalize_indent(inn.strip()),
             "output": normalize_indent(out.strip()),
+            "explanation": normalize_indent(explanations[i].strip()) if i < len(explanations) and explanations[i] else ""
         }
         for i, (inn, out) in enumerate(zip(inputs, outputs))
     ]
@@ -44,6 +45,7 @@ def render_rust_template(data: dict) -> str:
         use_indoc = data.get("rust_signature") is None,
         samples=format_samples(
             data.get("sample_inputs", []),
-            data.get("sample_outputs", [])
+            data.get("sample_outputs", []),
+            data.get("sample_explanations", [])
         ),
     )

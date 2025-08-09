@@ -9,8 +9,8 @@ MAX_WIDTH = 84
 def format_dmoj_text(text: str, max_width: int = MAX_WIDTH) -> str:
     def _replace_tilde_block(match: re.Match) -> str:
         content = match.group(1)
-        content = content.replace(r"\le", "≤").replace(r"\,", " ")
-        content = content.replace(r"\ne", "≠").replace(r"\,", " ")
+        content = content.replace(r"\le", "<=").replace(r"\,", " ")
+        content = content.replace(r"\ne", "!=").replace(r"\,", " ")
         content = content.replace(r"\times", "×").replace(r"\,", " ")
         content = content.replace(r"\dots", "…")
         content = re.sub(r'(?<!\w)([A-Za-z]\w*)(?!\w)', r'`\1`', content)
@@ -41,9 +41,6 @@ def format_leetcode_text(html: str, max_width: int = MAX_WIDTH) -> str:
         sup.replace_with(NavigableString(f"^{sup.get_text(strip=True)}"))
 
     def _process_code_content(s: str) -> str:
-        s = s.replace("<=", "≤").replace(">=", "≥")
-        s = re.sub(r"\s*≤\s*", " ≤ ", s)
-        s = re.sub(r"\s*≥\s*", " ≥ ", s)
         s = re.sub(r"\s*\^\s*", "^", s)
 
         ident_pattern = re.compile(r"""
