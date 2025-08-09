@@ -30,7 +30,11 @@
 {% endfor %}
 {% endif %}
 
+{% if rust_signature %}
+{{ rust_signature }}
+{% else %}
 pub fn {{ function_name }}(input: &str) -> String {
+{% endif %}
     todo!("pending solution!")
 }
 

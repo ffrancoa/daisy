@@ -1,4 +1,6 @@
 from urllib.parse import urlparse
+import json
+import re
 
 import requests
 from bs4 import BeautifulSoup
@@ -29,6 +31,7 @@ def extract_problem_parts(url: str) -> dict:
       question(titleSlug: $titleSlug) {
         title
         content
+        codeDefinition
         sampleTestCase
         exampleTestcases
       }
@@ -84,6 +87,8 @@ def extract_problem_parts(url: str) -> dict:
 
     constraints_block = group_constraints(constraints_parts) if constraints_parts else None
 
+    rust_signature = extract_rust_signature(question.get("codeDefinition", ""))
+
     return {
         "title": title,
         "description": "\n\n".join(description_parts),
@@ -91,4 +96,31 @@ def extract_problem_parts(url: str) -> dict:
         "constraints_header": constraints_header,
         "sample_inputs": [],
         "sample_outputs": [],
+        "rust_signature": rust_signature,
     }
+
+def extract_rust_signature(code_definition_json: str) -> str | None:
+    """
+    Extracts only the Rust function signature from LeetCode's codeDefinition JSON.
+    """
+    try:
+        code_defs = json.loads(code_definition_json)
+    except json.JSONDecodeError:
+        return None
+
+    rust_entry = next((entry for entry in code_defs if entry.get("value") == "rust"), None)
+    if not rust_entry:
+        return None
+
+    default_code = rust_entry.get("defaultCode", "")
+    # Regex: find `pub fn name(...) -> type { ... }` capturing braces content non-greedily
+    matched = re.search(
+        r"(pub\s+fn\s+[^(]+\([^)]*\)\s*->\s*[^{]+\{\s*\})",
+        default_code,
+        re.S
+    )
+    if matched:
+        code_snippet = matched.group(1).strip()
+        lines = code_snippet.strip().splitlines()
+        return lines[0]
+    return None
