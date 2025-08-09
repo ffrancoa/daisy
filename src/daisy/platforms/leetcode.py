@@ -12,16 +12,16 @@ HEADERS = {
     "Content-Type": "application/json",
 }
 
-def _slug_from_url(url: str) -> str:
-    """
-    Extracts the problem slug from a LeetCode URL.
-    """
-    path_parts = urlparse(url).path.strip("/").split("/")
-    if len(path_parts) >= 2 and path_parts[0] == "problems":
-        return path_parts[1]
-    raise ValueError(f"Invalid LeetCode problem URL: {url}")
-
 def extract_problem_parts(url: str) -> dict:
+    def _slug_from_url(url: str) -> str:
+        """
+        Extracts the problem slug from a LeetCode URL.
+        """
+        path_parts = urlparse(url).path.strip("/").split("/")
+        if len(path_parts) >= 2 and path_parts[0] == "problems":
+            return path_parts[1]
+        raise ValueError(f"Invalid LeetCode problem URL: {url}")
+
     slug = _slug_from_url(url)
 
     query = """
@@ -53,7 +53,7 @@ def extract_problem_parts(url: str) -> dict:
     soup = BeautifulSoup(question["content"], "lxml")
     paragraphs = soup.find_all("p")
 
-    # Detect end of description (empty paragraph separator)
+    # detect end of description (empty paragraph separator)
     desc_end_idx = None
     for i, p in enumerate(paragraphs):
         if not p.get_text(strip=True):

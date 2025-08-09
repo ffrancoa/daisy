@@ -42,43 +42,34 @@ def format_leetcode_text(html: str, max_width: int = MAX_WIDTH) -> str:
 
     # helper: process the textual content inside <code> blocks
     def _process_code_content(s: str) -> str:
-        # Replace HTML entities and plain tokens for <=/>= first
-        s = s.replace("&lt;=", "≤").replace("&gt;=", "≥")
         s = s.replace("<=", "≤").replace(">=", "≥")
 
-        # Normalize spaces around ≤/≥
         s = re.sub(r"\s*≤\s*", " ≤ ", s)
         s = re.sub(r"\s*≥\s*", " ≥ ", s)
 
-        # Remove spaces around ^ (exponents): "10 ^4" -> "10^4"
         s = re.sub(r"\s*\^\s*", "^", s)
 
-        # Wrap identifier-like tokens (letters, underscores, digits; allow dotted parts)
-        # - begins with a letter, then \w*; allow ".part" sequences
         ident_pattern = r"(?<!\w)([A-Za-z]\w*(?:\[[^\]]+\]|\.[A-Za-z]\w*)*)(?!\w)"
         s = re.sub(ident_pattern, r"`\1`", s)
 
-        # Collapse multiple spaces and trim
+        # collapse multiple spaces and trim
         s = re.sub(r"\s+", " ", s).strip()
         return s
 
-    # 2) For each <code> tag, replace with processed text (which may include backticks)
     for code_tag in soup.find_all("code"):
         processed = _process_code_content(code_tag.get_text())
         code_tag.replace_with(NavigableString(processed))
 
-    # 3) Extract resulting text and apply final normalizations
     text = soup.get_text()
 
-    # Ensure spaces around ≤/≥ globally (just in case)
+    # ensure spaces around ≤/≥ globally (just in case)
     text = re.sub(r"\s*≤\s*", " ≤ ", text)
     text = re.sub(r"\s*≥\s*", " ≥ ", text)
 
-    # Remove stray spaces before ^ and normalize spaces
+    # remove stray spaces before ^ and normalize spaces
     text = re.sub(r"\s+\^", "^", text)
     text = re.sub(r"\s+", " ", text).strip()
 
-    # 4) Wrap each logical line to max_width (preserve empty lines)
     processed_lines = []
     for raw_line in text.splitlines():
         if raw_line.strip():
