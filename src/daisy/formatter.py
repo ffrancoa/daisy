@@ -14,11 +14,12 @@ def format_samples(inputs: list[str], outputs: list[str]) -> list[dict]:
     return [
         {
             "name": "example" if len(inputs) == 1 else f"example_{i+1}",
-            "input": textwrap.indent(normalize_indent(inn.strip()), " " * 12),
-            "output": textwrap.indent(normalize_indent(out.strip()), " " * 12),
+            "input": normalize_indent(inn.strip()),
+            "output": normalize_indent(out.strip()),
         }
         for i, (inn, out) in enumerate(zip(inputs, outputs))
     ]
+
 
 def render_rust_template(data: dict) -> str:
     env = Environment(

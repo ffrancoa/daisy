@@ -86,16 +86,16 @@ def extract_problem_parts(url: str) -> dict:
                 constraints_parts.append(format_leetcode_text(str(li)))
 
     constraints_block = group_constraints(constraints_parts) if constraints_parts else None
-
     rust_signature = extract_rust_signature(question.get("codeDefinition", ""))
+    sample_inputs, sample_outputs = extract_samples(soup)
 
     return {
         "title": title,
         "description": "\n\n".join(description_parts),
         "constraints": constraints_block,
         "constraints_header": constraints_header,
-        "sample_inputs": [],
-        "sample_outputs": [],
+        "sample_inputs": sample_inputs,
+        "sample_outputs": sample_outputs,
         "rust_signature": rust_signature,
     }
 
@@ -124,3 +124,161 @@ def extract_rust_signature(code_definition_json: str) -> str | None:
         lines = code_snippet.strip().splitlines()
         return lines[0]
     return None
+
+def extract_samples(soup: BeautifulSoup) -> tuple[list[str], list[str]]:
+    """
+    Parse LeetCode <pre> example blocks and produce Rust-ready
+    `sample_inputs` (multi-line let-statements) and `sample_outputs`.
+    This is generic: it discovers `name = value` pairs and maps:
+      - bracketed lists -> `vec![...]` (elements normalized with ", ")
+      - scalars left as-is
+    """
+    def _split_top_level_commas(s: str) -> list[str]:
+        parts = []
+        buf = []
+        depth = 0
+        in_quote = None
+        for ch in s:
+            if in_quote:
+                buf.append(ch)
+                if ch == in_quote:
+                    in_quote = None
+                continue
+            if ch in ("'", '"'):
+                in_quote = ch
+                buf.append(ch)
+                continue
+            if ch == '[':
+                depth += 1
+            elif ch == ']':
+                depth -= 1
+            if ch == ',' and depth == 0:
+                parts.append("".join(buf).strip())
+                buf = []
+            else:
+                buf.append(ch)
+        if buf:
+            parts.append("".join(buf).strip())
+        return parts
+
+    def _parse_assignments(s: str) -> list[tuple[str, str]]:
+        """
+        Returns list of (name, raw_value) preserving order.
+        Handles values that are bracketed lists (with nested brackets)
+        or simple scalars separated by top-level commas.
+        """
+        i = 0
+        n = len(s)
+        assignments = []
+        while i < n:
+            # skip whitespace
+            while i < n and s[i].isspace():
+                i += 1
+            # name
+            m = re.match(r"[A-Za-z_]\w*", s[i:])
+            if not m:
+                break
+            name = m.group(0)
+            i += m.end()
+            # skip spaces and equals
+            while i < n and s[i].isspace():
+                i += 1
+            if i >= n or s[i] != "=":
+                break
+            i += 1
+            # skip spaces
+            while i < n and s[i].isspace():
+                i += 1
+            # value
+            if i < n and s[i] == "[":
+                start = i
+                depth = 0
+                in_quote = None
+                while i < n:
+                    ch = s[i]
+                    if in_quote:
+                        if ch == in_quote:
+                            in_quote = None
+                    else:
+                        if ch in ('"', "'"):
+                            in_quote = ch
+                        elif ch == "[":
+                            depth += 1
+                        elif ch == "]":
+                            depth -= 1
+                            if depth == 0:
+                                i += 1
+                                break
+                    i += 1
+                raw_value = s[start:i].strip()
+            else:
+                start = i
+                # scalar until top-level comma
+                while i < n and s[i] != ",":
+                    i += 1
+                raw_value = s[start:i].strip()
+            assignments.append((name, raw_value))
+            # skip comma if present
+            while i < n and s[i].isspace():
+                i += 1
+            if i < n and s[i] == ",":
+                i += 1
+        return assignments
+
+    def _to_rust_value(raw: str) -> str:
+        raw = raw.strip()
+        # list-ish
+        if raw.startswith("[") and raw.endswith("]"):
+            inner = raw[1:-1].strip()
+            if inner == "":
+                return "vec![]"
+            elems = _split_top_level_commas(inner)
+            norm_elems = []
+            for e in elems:
+                e = e.strip()
+                # keep strings as-is, but normalize quotes to double quotes if single quoted
+                if (e.startswith("'") and e.endswith("'")):
+                    e = '"' + e[1:-1].replace('"', '\\"') + '"'
+                norm_elems.append(e)
+            return "vec![" + ", ".join(norm_elems) + "]"
+        # quoted string
+        if (raw.startswith("'") and raw.endswith("'")):
+            return '"' + raw[1:-1].replace('"', '\\"') + '"'
+        # numeric?
+        if re.fullmatch(r"-?\d+(\.\d+)?", raw):
+            return raw
+        # boolean (lowercase)
+        if raw.lower() in ("true", "false"):
+            return raw.lower()
+        # fallback: return as-is (caller may handle)
+        return raw
+
+    sample_inputs: list[str] = []
+    sample_outputs: list[str] = []
+
+    for pre in soup.find_all("pre"):
+        text = pre.get_text("\n", strip=True)
+        input_m = re.search(r"Input:\s*(.+)", text)
+        output_m = re.search(r"Output:\s*(.+)", text)
+        if not input_m or not output_m:
+            continue
+
+        input_str = input_m.group(1).strip()
+        output_str = output_m.group(1).strip()
+
+        assignments = _parse_assignments(input_str)
+        if not assignments:
+            continue
+
+        input_lines = []
+        for name, raw_val in assignments:
+            rust_val = _to_rust_value(raw_val)
+            input_lines.append(f"let {name} = {rust_val};")
+
+        sample_inputs.append("\n".join(input_lines))
+
+        # expected
+        expected_val = _to_rust_value(output_str)
+        sample_outputs.append(expected_val)
+
+    return sample_inputs, sample_outputs
