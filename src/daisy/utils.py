@@ -40,21 +40,23 @@ def format_leetcode_text(html: str, max_width: int = MAX_WIDTH) -> str:
     for sup in soup.find_all("sup"):
         sup.replace_with(NavigableString(f"^{sup.get_text(strip=True)}"))
 
-    # helper: process the textual content inside <code> blocks
     def _process_code_content(s: str) -> str:
         s = s.replace("<=", "≤").replace(">=", "≥")
-
         s = re.sub(r"\s*≤\s*", " ≤ ", s)
         s = re.sub(r"\s*≥\s*", " ≥ ", s)
-
         s = re.sub(r"\s*\^\s*", "^", s)
 
-        ident_pattern = r"(?<!\w)([A-Za-z]\w*(?:\[[^\]]+\]|\.[A-Za-z]\w*)*)(?!\w)"
-        s = re.sub(ident_pattern, r"`\1`", s)
+        ident_pattern = re.compile(r"""
+            (?<!\w)                                     # no word char before
+            ([A-Za-z]\w*(?:\[[^\]]+\]|\.[A-Za-z]\w*)*)  # base identifier
+            (\^[A-Za-z]\w*)?                            # optional exponent
+            (?!\w)                                      # no word char after
+        """, re.VERBOSE)
 
-        # collapse multiple spaces and trim
-        s = re.sub(r"\s+", " ", s).strip()
-        return s
+        # only wrap the base in backticks, leave exponent raw
+        s = ident_pattern.sub(lambda m: f"`{m.group(1)}`{m.group(2) or ''}", s)
+
+        return re.sub(r"\s+", " ", s).strip()
 
     for code_tag in soup.find_all("code"):
         processed = _process_code_content(code_tag.get_text())

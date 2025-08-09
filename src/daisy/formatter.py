@@ -40,6 +40,7 @@ def render_rust_template(data: dict) -> str:
         output_spec=data.get("output_spec", ""),
         function_name=to_snake_case(data["title"]),
         rust_signature=data.get("rust_signature"),
+        use_indoc = data.get("rust_signature") is None,
         samples=format_samples(
             data.get("sample_inputs", []),
             data.get("sample_outputs", [])

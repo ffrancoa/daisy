@@ -41,7 +41,9 @@ pub fn {{ function_name }}(input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    {% if use_indoc %}
     use indoc::indoc;
+    {% endif %}
 
 {% for s in samples -%}
     #[test]
