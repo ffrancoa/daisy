@@ -41,22 +41,10 @@ pub fn {{ function_name }}(input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    {% if use_indoc %}
-    use indoc::indoc;
-    {% endif %}
-
 {% for s in samples %}
+
     #[test]
     fn {{ s.name }}() {
-        {% if use_indoc %}
-        let input = indoc! {"
-{{ s.input | indent(12, true) }}
-        "};
-        let expected = indoc! {"
-{{ s.output | indent(12, true) }}
-        "};
-        assert_eq!({{ function_name }}(input), expected);
-        {% else %}
 {{ s.input | indent(8, true) }}
         let expected = {{ s.output }};
         {% if s.explanation %}
@@ -65,7 +53,6 @@ mod tests {
         {% endfor %}
         {% endif %}
         assert_eq!({{ function_name }}({{ s.varnames | join(", ") }}), expected);
-        {% endif %}
     }
 {% endfor %}
 }

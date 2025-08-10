@@ -1,0 +1,38 @@
+// {{ title }}
+//
+{% for line in description.splitlines() -%}
+{{ '// ' + line if line else '//' }}
+{% endfor %}
+{% if constraints %}
+//
+{{ '// ' + constraints_header }}
+{{ '// ' + '-' * constraints_header|length }}
+{% for line in constraints.splitlines() -%}
+{{ '// ' + line if line else '//' }}
+{% endfor %}
+{% endif -%}
+
+{% if input_spec %}
+//
+{{ '// ' + input_header }}
+{{ '// ' + '-' * input_header|length }}
+{% for line in input_spec.splitlines() -%}
+{{ '// ' + line if line else '//' }}
+{% endfor %}
+{% endif -%}
+
+{% if output_spec %}
+//
+{{ '// ' + output_header }}
+{{ '// ' + '-' * output_header|length }}
+{% for line in output_spec.splitlines() -%}
+{{ '// ' + line if line else '//' }}
+{% endfor %}
+{% endif %}
+
+#[macro_use]
+extern crate dmoj;
+
+fn main() {
+    todo!("pending solution!")
+}

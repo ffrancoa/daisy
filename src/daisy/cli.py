@@ -22,18 +22,21 @@ def cli():
 def url_cmd(url: str):
     """Generate template from problem URL."""
     domain = urlparse(url).netloc
-    scraper = next((fn for host, fn in SCRAPERS.items() if host in domain), None)
+    scraper_entry = next(((host, fn) for host, fn in SCRAPERS.items() if host in domain), None)
 
-    if not scraper:
+    if not scraper_entry:
         click.echo(f"Unsupported site: {domain}")
         return
 
     try:
+        host, scraper = scraper_entry
+        source = host.split(".")[0]
         data = scraper(url)
-        lib_content = render_rust_template(data)
+        data["source"] = source
+
+        lib_content = render_rust_template(data, source)
         project_name = to_snake_case(data["title"])
-        use_indoc = data.get("rust_signature") is None
-        write_rust_project(project_name, lib_content, use_indoc)
+        write_rust_project(project_name, lib_content)
     except Exception as e:
         click.echo(f"Error: {e}")
 

@@ -1,0 +1,19 @@
+use assert_cmd::Command;
+use indoc::indoc;
+
+#[test]
+fn test_cli() {
+    {% for s in samples %}
+    let input = indoc! {"
+{{ s.input | indent(8, true) }}
+    "};
+    let expected = indoc! {"
+{{ s.output | indent(8, true) }}
+    "};
+
+    Command::cargo_bin("{{ name }}").unwrap()
+        .write_stdin(input)
+        .assert()
+        .stdout(expected);
+    {% endfor %}
+}
