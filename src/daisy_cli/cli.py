@@ -9,10 +9,10 @@ from urllib.parse import urlparse
 import rich_click as click
 from rich.console import Console
 
-from daisy.formatter import render_rust_template
-from daisy.platforms import dmoj, leetcode
-from daisy.utils import to_snake_case
-from daisy.writer import write_rust_project
+from daisy_cli.formatter import render_rust_template
+from daisy_cli.platforms import dmoj, leetcode
+from daisy_cli.utils import to_snake_case
+from daisy_cli.writer import write_rust_project
 
 SCRAPERS = {
     "dmoj.ca": dmoj.extract_problem_parts,

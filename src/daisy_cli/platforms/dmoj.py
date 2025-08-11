@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from daisy.utils import extract_clean_title, format_dmoj_text
+from daisy_cli.utils import extract_clean_title, format_dmoj_text
 
 def extract_problem_parts(url: str) -> dict:
     response = requests.get(url)

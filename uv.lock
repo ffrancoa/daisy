@@ -77,7 +77,7 @@ wheels = [
 ]
 
 [[package]]
-name = "daisy"
+name = "daisy-cli"
 version = "0.6.0"
 source = { editable = "." }
 dependencies = [

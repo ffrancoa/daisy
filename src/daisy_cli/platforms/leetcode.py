@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from daisy.utils import format_leetcode_text, group_constraints
+from daisy_cli.utils import format_leetcode_text, group_constraints
 
 GRAPHQL_URL = "https://leetcode.com/graphql"
 HEADERS = {
