@@ -39,5 +39,8 @@ dev = [
 [tool.uv]
 package = true
 
-[tool.uv.sources]
-daisy = { path = "src/daisy" }
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
