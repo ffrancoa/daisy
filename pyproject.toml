@@ -1,9 +1,20 @@
+[build-system]
+requires = ["uv_build >= 0.7.19, <0.9.0"]
+build-backend = "uv_build"
+
 [project]
-name = "daisy"
+name = "daisy_ffrancoa"
 version = "0.6.0"
+authors = [
+  { name="Francesco Franco", email="ffrancoa97@gmail.com" },
+]
 description = "A Python CLI that scrapes coding sites to craft Rust problem templates."
 readme = "README.md"
 requires-python = ">=3.13"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
 dependencies = [
     "beautifulsoup4>=4.13.4",
     "jinja2>=3.1.6",
@@ -12,6 +23,7 @@ dependencies = [
     "rich-click>=1.8.9",
     "click>=8.1,<8.2",
 ]
+license = { file = "LICENSE" }
 
 [project.scripts]
 daisy = "daisy.cli:cli"
