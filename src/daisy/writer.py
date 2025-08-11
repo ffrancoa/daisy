@@ -14,5 +14,3 @@ def write_rust_project(project_name: str, files: dict[str, str]) -> None:
         file_path = root_dir / rel_path
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_text(content.strip() + "\n", encoding="utf-8")
-
-    echo(f"ok: project created at '{root_dir}'")
