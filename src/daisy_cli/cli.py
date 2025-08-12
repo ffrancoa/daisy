@@ -217,7 +217,7 @@ def cli():
     """Scrape coding sites and generate Rust problem templates."""
 
 
-@cli.command("url")
+@cli.command("pull")
 @click.argument("url")
 def url_command(url: str):
     """Create Rust project from problem URL."""
