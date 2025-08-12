@@ -77,7 +77,7 @@ jobs:
           
       - name: Test CLI installation and functionality
         run: |
-          uv pip install --system --find-links dist/ --no-index daisy-cli
+          uv pip install --system dist/*.whl
           daisy --help
           python -c "import daisy_cli; print(f'daisy-cli installed successfully on Python {__import__(\"sys\").version}')"
 
