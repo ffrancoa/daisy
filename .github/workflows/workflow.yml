@@ -76,6 +76,7 @@ jobs:
           path: dist/
           
       - name: Test CLI installation and functionality
+        shell: bash
         run: |
           uv pip install --system dist/*.whl
           daisy --help
