@@ -3,7 +3,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
-from daisy.utils import to_snake_case
+from daisy_cli.utils import to_snake_case
 
 INDOC_VERSION       = "2.0.6"
 DMOJ_VERSION        = "0.1.5"
