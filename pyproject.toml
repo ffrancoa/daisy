@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "daisy-cli"
-version = "0.6.1"
+version = "0.6.5"
 authors = [
   { name="Francesco Franco", email="ffrancoa97@gmail.com" },
 ]
