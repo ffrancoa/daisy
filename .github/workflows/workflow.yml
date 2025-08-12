@@ -44,7 +44,7 @@ jobs:
       - name: Verify build artifacts
         run: |
           ls -la dist/
-          uv pip install --dry-run dist/*.whl
+          uv pip install --system --dry-run dist/*.whl
           
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
