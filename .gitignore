@@ -1,6 +1,6 @@
 src/daisy.egg-info
-src/daisy/__pycache__
-src/daisy/platforms/__pycache__
+src/daisy_cli/__pycache__
+src/daisy_cli/platforms/__pycache__
 exercises/
 dist/
 .git/
