@@ -228,6 +228,12 @@ def pull_command(url: str):
         raise click.Abort()
     
     source, scraper_func = scraper_info
+
+    cwd = Path.cwd()
+    if cwd.name == "exercises":
+        exercises_dir = cwd
+    else:
+        exercises_dir = cwd / "exercises"
     
     try:
         data = scraper_func(url)
@@ -236,7 +242,7 @@ def pull_command(url: str):
         lib_content = render_rust_template(data, source)
         project_name = to_snake_case(data["title"])
         
-        write_rust_project(project_name, lib_content)
+        write_rust_project(project_name, lib_content, exercises_dir)
         console.print(f"[green]successfully created project: {project_name}[/green]")
         
     except Exception as e:
