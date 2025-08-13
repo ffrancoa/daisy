@@ -219,8 +219,8 @@ def cli():
 
 @cli.command("pull")
 @click.argument("url")
-def url_command(url: str):
-    """Create Rust project from problem URL."""
+def pull_command(url: str):
+    """Create a Rust project from problem URL."""
     scraper_info = find_scraper(url)
     if not scraper_info:
         netloc = urlparse(url).netloc
