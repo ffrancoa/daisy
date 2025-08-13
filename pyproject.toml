@@ -8,7 +8,7 @@ version = "0.6.5"
 authors = [
   { name="Francesco Franco", email="ffrancoa97@gmail.com" },
 ]
-description = "A Python CLI that scrapes coding sites to craft Rust problem templates."
+description = "Daisy CLI — Grow your Rust skills, one petal at a time."
 readme = "README.md"
 requires-python = ">=3.13"
 classifiers = [
@@ -32,9 +32,6 @@ daisy = "daisy_cli.cli:cli"
 dev = [
     "ipython>=9.4.0",
 ]
-
-[tool.setuptools.package-data]
-"daisy" = ["templates/**/*.j2"]
 
 [tool.uv]
 package = true
